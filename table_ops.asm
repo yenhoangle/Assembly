@@ -13,6 +13,7 @@
 	menu_7: .asciiz "- Swap any two cells [7]\n"
 	menu_8: .asciiz "- Print any cell [8]\n"
 	printing_message: .asciiz "Printing...\n"
+	op_complete: .asciiz "Table operation is complete.\n"
 	menu_9: .asciiz "- Exit [9]\n"
 	space: .asciiz " "
 	newline: .asciiz "\n"
@@ -29,8 +30,11 @@ main:
 	li $t4, 0 #offset
 menu_loop:
 	move $s6, $ra
-	beq $s7, 9, exit
+	beq $s7, 1, print_row
+	beq $s7, 2, print_col
 	beq $s7, 8, print_cell
+	beq $s7, 9, exit
+
 	jal print_menu
 	jal accept_input
 	j menu_loop	
@@ -80,6 +84,7 @@ exit:
 	li $v0, 10
 	syscall
 print_cell:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_row
 	syscall
@@ -99,12 +104,14 @@ print_cell:
 	lw $a0, table($s4) #grab value from table and print
 	li, $v0, 1
 	syscall
-	li $v0, 4
+	b end_printing
+end_printing: #to add a new line before returning to menu
+ 	li $v0, 4
 	la $a0, newline
 	syscall
-	li $s7, 0 #reset the choice register
 	b menu_return
 print_row:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_row
 	syscall
@@ -112,26 +119,50 @@ print_row:
 	syscall
 	move $a1, $v0 #store row choice
 	li $a2, 0 #init column
-	li $t0, 0 #t0 is our offset counter
+	li $v0, 4
+	la $a0, printing_message
+	syscall
 	j print_row_loop
 print_row_loop:
-	beq $a2, 2, menu_return
+	beq $a2, 3, end_printing
 	jal get_first_offset
 	lw $a0, table($s4) #grab value from table and print
 	li, $v0, 1
 	syscall
+	li $v0, 4
+	la $a0, space
+	syscall
 	addi $a2,$a2, 1
-	b print_row_loop 	
+	j print_row_loop
 print_col:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_col
 	syscall
 	li $v0, 5
 	syscall
 	move $a2, $v0 #store column choice
+	li $a1, 0 #init row
+	li $v0, 4
+	la $a0, printing_message
+	syscall
+	j print_col_loop
 print_col_loop:
-print_table_loop:
+	beq $a1, 3, end_printing
+	jal get_first_offset
+	lw $a0, table($s4) #grab value from table and print
+	li, $v0, 1
+	syscall
+	li $v0, 4
+	la $a0, space
+	syscall
+	addi $a1,$a1, 1
+	j print_col_loop
+print_table_outer_loop:
+	li $s7, 0 #reset the choice register
+print_table_inner_loop:
 mult_row_const:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_row
 	syscall
@@ -146,6 +177,7 @@ mult_row_const:
 	move $a3, $v0 #store const choice
 mult_row_loop:
 add_row:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_row
 	syscall
@@ -166,6 +198,7 @@ add_row:
 	move $a3, $v0 #store row being replaced
 add_row_loop:
 swap_cell:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_row
 	syscall
@@ -196,6 +229,7 @@ swap_cell:
 	#TODO: calculate offset here
 	#swap: move current val into prev offset saved, then move previous value to current offset
 swap_row:
+	li $s7, 0 #reset the choice register
 	li $v0, 4
 	la $a0, select_row
 	syscall
