@@ -15,7 +15,7 @@
 	menu_9: .asciiz "- Exit [9]\n"
 .text
 menu_loop:
-	beq $a1, 9, exit
+	beq $s7, 9, exit
 	jal print_menu
 	jal accept_input
 	j menu_loop	
@@ -54,13 +54,102 @@ print_menu:
 accept_input:
 	li $v0, 5
 	syscall
-	move $a1, $v0 #a1 stores menu option
+	move $s7, $v0 #s7 stores menu option
 	b done	
 done:
 	jr $ra
 exit:
 	li $v0, 10
 	syscall
+print_cell:
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $a1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_col
+	syscall
+	li $v0, 5
+	syscall
+	move $a2, $v0 #stores column choice
+	#TODO: FINISH
+	b done
+print_row:
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $a1, $v0 #stores row choice
+	b done
+print_row_loop:
+print_col:
+	li $v0, 4
+	la $a0, select_col
+	syscall
+	li $v0, 5
+	syscall
+	move $a2, $v0 #stores column choice
+print_col_loop:
+print_table_loop:
+mult_row_const:
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $a1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_const
+	syscall
+	li $v0, 5
+	syscall
+	move $a3, $v0 #stores const choice
+mult_row_loop:
+swap_cell:
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $a1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_col
+	syscall
+	li $v0, 5
+	syscall
+	move $a2, $v0 #stores column choice
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $s1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_col
+	syscall
+	li $v0, 5
+	syscall
+	move $s2, $v0 #stores column choice
 	
+swap_row:
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $a1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $s1, $v0 #stores row choice
+
+	
+
+		
 	
 	
