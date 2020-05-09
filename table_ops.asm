@@ -13,8 +13,21 @@
 	menu_7: .asciiz "- Swap any two cells [7]\n"
 	menu_8: .asciiz "- Print any cell [8]\n"
 	menu_9: .asciiz "- Exit [9]\n"
+	space: .asciiz " "
+	newline: .asciiz "\n"
+	table: #hard coded table
+		.word 1, 2, 3
+		.word 10, 20, 30
+		.word 100, 200, 300
 .text
+main:
+	li $t0, 0 #index
+	li $t1, 3 #row size
+	li $t2, 3 #col size
+	li $t3, 4 #word size
+	li $t4, 0 #offset
 menu_loop:
+	move $s6, $ra
 	beq $s7, 9, exit
 	jal print_menu
 	jal accept_input
@@ -58,6 +71,9 @@ accept_input:
 	b done	
 done:
 	jr $ra
+menu_return:
+	move $ra, $s6
+	jr $ra
 exit:
 	li $v0, 10
 	syscall
@@ -74,7 +90,9 @@ print_cell:
 	li $v0, 5
 	syscall
 	move $a2, $v0 #stores column choice
-	#TODO: FINISH
+	jal get_first_offset #calculate offset
+	lw $a0, table($s4) #grabs value from table and print
+	li, $v0, 1
 	b done
 print_row:
 	li $v0, 4
@@ -83,8 +101,11 @@ print_row:
 	li $v0, 5
 	syscall
 	move $a1, $v0 #stores row choice
-	b done
+	li $t0, 0 #t0 is our offset counter
+	b print_row_loop
 print_row_loop:
+	beq $t0, 12, done 
+	lw $t6
 print_col:
 	li $v0, 4
 	la $a0, select_col
@@ -108,6 +129,26 @@ mult_row_const:
 	syscall
 	move $a3, $v0 #stores const choice
 mult_row_loop:
+add_row:
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $a1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_row
+	syscall
+	li $v0, 5
+	syscall
+	move $s1, $v0 #stores row choice
+	li $v0, 4
+	la $a0, select_row_replace
+	syscall
+	li $v0, 5
+	syscall
+	move $a3, $v0 #stores row being replaced
+add_row_loop:
 swap_cell:
 	li $v0, 4
 	la $a0, select_row
@@ -121,6 +162,9 @@ swap_cell:
 	li $v0, 5
 	syscall
 	move $a2, $v0 #stores column choice
+	#TODO: calculate offset here
+	#save value to somewhere
+	#save offset to somewhere
 	li $v0, 4
 	la $a0, select_row
 	syscall
@@ -133,7 +177,8 @@ swap_cell:
 	li $v0, 5
 	syscall
 	move $s2, $v0 #stores column choice
-	
+	#TODO: calculate offset here
+	#swap: move current val into prev offset saved, then move previous value to current offset
 swap_row:
 	li $v0, 4
 	la $a0, select_row
@@ -147,7 +192,16 @@ swap_row:
 	li $v0, 5
 	syscall
 	move $s1, $v0 #stores row choice
-
+get_first_offset: #calculating offset and put it in $s4
+	mul $s4, $a1, $t2 #row x col size
+	add $s4, $s4, $a2 #prev val + col
+	mul $s4, $s4, $t3 #prev val x 4
+	b done
+get_second_offset: #calculating offset and put it in $t4
+	mul $t4, $s1, $t2 #row x col size
+	add $t4, $t4, $s2 #prev val + col
+	mul $t4, $t4, $t3 #prev val x 4
+	b done
 	
 
 		
