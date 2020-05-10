@@ -13,7 +13,7 @@
 	menu_7: .asciiz "- Swap any two cells [7]\n"
 	menu_8: .asciiz "- Print any cell [8]\n"
 	printing_message: .asciiz "Printing...\n"
-	op_complete: .asciiz "Table operation is complete.\n"
+	doing_op: .asciiz "Performing table operation...\n"
 	menu_9: .asciiz "- Exit [9]\n"
 	space: .asciiz " "
 	newline: .asciiz "\n"
@@ -29,7 +29,8 @@ menu_loop:
 	li $t1, 3 #row size
 	li $t2, 3 #col size
 	li $t3, 4 #word size
-	li $t4, 0 #offset
+	li $t4, 0 #offset1
+	li $s4, 0 #offset2
 	#reset choices 
 	li $a1, 0
 	li $a2, 0
@@ -38,6 +39,7 @@ menu_loop:
 	beq $s7, 1, print_row
 	beq $s7, 2, print_col
 	beq $s7, 3, print_table
+	beq $s7, 4, mult_row_const
 	beq $s7, 8, print_cell
 	beq $s7, 9, exit
 
@@ -210,7 +212,18 @@ mult_row_const:
 	li $v0, 5
 	syscall
 	move $a3, $v0 #store const choice
+	li $v0, 4
+	la $a0, doing_op
+	syscall
+	b mult_row_loop
 mult_row_loop:
+	beq $a2, 3, menu_return
+	jal get_first_offset
+	lw $t5, table($s4) #grab value from table and put in t5
+	mul $t5, $t5, $a3
+	sw $t5, table($s4)
+	addi $a2, $a2, 1
+	b mult_row_loop
 add_row:
 	li $s7, 0 #reset the choice register
 	li $v0, 4
