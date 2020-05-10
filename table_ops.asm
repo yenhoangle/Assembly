@@ -23,15 +23,21 @@
 		.word 100, 200, 300
 .text
 main:
+menu_loop:
+	move $s6, $ra
 	li $t0, 0 #index
 	li $t1, 3 #row size
 	li $t2, 3 #col size
 	li $t3, 4 #word size
 	li $t4, 0 #offset
-menu_loop:
-	move $s6, $ra
+	#reset choices 
+	li $a1, 0
+	li $a2, 0
+	li $s1, 0
+	li $s2, 0	
 	beq $s7, 1, print_row
 	beq $s7, 2, print_col
+	beq $s7, 3, print_table
 	beq $s7, 8, print_cell
 	beq $s7, 9, exit
 
@@ -158,9 +164,38 @@ print_col_loop:
 	syscall
 	addi $a1,$a1, 1
 	j print_col_loop
-print_table_outer_loop:
+print_table:
 	li $s7, 0 #reset the choice register
+	li $a1, 0 #init row
+	li $a2, 0 #init col
+	li $v0, 4
+	la $a0, printing_message
+	syscall
+	b print_table_outer_loop
+print_table_outer_loop:
+	move $s5, $ra #stores return address
+	beq $a1, 3, menu_return
+	jal print_table_inner_loop
+	addi $a1, $a1, 1 #increase row counter
+	li $a2, 0 #reset inner loop
+	li $v0, 4 #format a new line between rows
+	la $a0, newline
+	syscall
+	j print_table_outer_loop		
 print_table_inner_loop:
+	beq $a2, 3, done
+	#calculate offset
+	mul $s4, $a1, $t2 #row x col size
+	add $s4, $s4, $a2 #prev val + col
+	mul $s4, $s4, $t3 #prev val x 4
+	lw $a0, table($s4) #grab value from table and print
+	li, $v0, 1
+	syscall
+	li $v0, 4
+	la $a0, space
+	syscall
+	addi $a2,$a2, 1
+	j print_table_inner_loop
 mult_row_const:
 	li $s7, 0 #reset the choice register
 	li $v0, 4
