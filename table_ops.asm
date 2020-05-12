@@ -40,6 +40,7 @@ menu_loop:
 	beq $s7, 2, print_col
 	beq $s7, 3, print_table
 	beq $s7, 4, mult_row_const
+	beq $s7, 7, swap_cell
 	beq $s7, 8, print_cell
 	beq $s7, 9, exit
 
@@ -132,7 +133,7 @@ print_row:
 	syscall
 	j print_row_loop
 print_row_loop:
-	beq $a2, 3, end_printing
+	beq $a2, $t2, end_printing
 	jal get_first_offset
 	lw $a0, table($s4) #grab value from table and print
 	li, $v0, 1
@@ -156,7 +157,7 @@ print_col:
 	syscall
 	j print_col_loop
 print_col_loop:
-	beq $a1, 3, end_printing
+	beq $a1, $t1, end_printing
 	jal get_first_offset
 	lw $a0, table($s4) #grab value from table and print
 	li, $v0, 1
@@ -176,7 +177,7 @@ print_table:
 	b print_table_outer_loop
 print_table_outer_loop:
 	move $s5, $ra #stores return address
-	beq $a1, 3, menu_return
+	beq $a1, $t1, menu_return
 	jal print_table_inner_loop
 	addi $a1, $a1, 1 #increase row counter
 	li $a2, 0 #reset inner loop
@@ -185,7 +186,7 @@ print_table_outer_loop:
 	syscall
 	j print_table_outer_loop		
 print_table_inner_loop:
-	beq $a2, 3, done
+	beq $a2, $t2, done
 	#calculate offset
 	mul $s4, $a1, $t2 #row x col size
 	add $s4, $s4, $a2 #prev val + col
@@ -217,7 +218,7 @@ mult_row_const:
 	syscall
 	b mult_row_loop
 mult_row_loop:
-	beq $a2, 3, menu_return
+	beq $a2, $t2, menu_return
 	jal get_first_offset
 	lw $t5, table($s4) #grab value from table and put in t5
 	mul $t5, $t5, $a3
@@ -244,7 +245,10 @@ add_row:
 	li $v0, 5
 	syscall
 	move $a3, $v0 #store row being replaced
+	li $a2, 0 #init column counter
 add_row_loop:
+	beq $a2, $t2, menu_loop
+	
 swap_cell:
 	li $s7, 0 #reset the choice register
 	li $v0, 4
@@ -259,11 +263,8 @@ swap_cell:
 	li $v0, 5
 	syscall
 	move $a2, $v0 #store column choice
-	#TODO: calculate offset here
-	#save value to somewhere
-	#save offset to somewhere
 	li $v0, 4
-	la $a0, select_row
+	la $a0, select_row 
 	syscall
 	li $v0, 5
 	syscall
@@ -274,8 +275,16 @@ swap_cell:
 	li $v0, 5
 	syscall
 	move $s2, $v0 #store column choice
-	#TODO: calculate offset here
-	#swap: move current val into prev offset saved, then move previous value to current offset
+	li $v0, 4
+	la $a0, doing_op
+	syscall	
+	jal get_first_offset #offset 1 is stored in s4
+	jal get_second_offset #offset 2 is stored in t4
+	lw $t5, table($s4) #load first value into t5
+	lw $t6, table($t4) #load second value into t6
+	sw $t5, table($t4) #move temp value of first to second
+	sw $t6, table($s4) #move temp value of second to first
+	b menu_return
 swap_row:
 	li $s7, 0 #reset the choice register
 	li $v0, 4
@@ -300,6 +309,12 @@ get_second_offset: #calculating offset and put it in $t4
 	add $t4, $t4, $s2 #prev val + col
 	mul $t4, $t4, $t3 #prev val x 4
 	b done
+get_third_offset: #calculating offset and put it in f4
+	mul $t7, $a3, $t2 #row x col size
+	add $t7, $t7, $s3 #prev val + col
+	mul $t7, $t7, $t3 #prev val x 4
+	b done
+
 	
 
 		
