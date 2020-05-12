@@ -39,6 +39,7 @@ menu_loop:
 	beq $s7, 1, print_row
 	beq $s7, 2, print_col
 	beq $s7, 3, print_table
+	beq $s7, 5, add_row
 	beq $s7, 4, mult_row_const
 	beq $s7, 7, swap_cell
 	beq $s7, 8, print_cell
@@ -245,10 +246,25 @@ add_row:
 	li $v0, 5
 	syscall
 	move $a3, $v0 #store row being replaced
-	li $a2, 0 #init column counter
+	#init column counters
+	li $a2, 0
+	li $s2, 0
+	li $s3, 0
+	b add_row_loop
 add_row_loop:
 	beq $a2, $t2, menu_loop
-	
+	#get the offset values
+	jal get_first_offset #offset 1 in s4
+	jal get_second_offset #offset 2 in t4
+	jal get_third_offset #offset 3 in t7
+	lw $t5, table($s4) #load first value into t5
+	lw $t6, table($t4) #load second value into t6
+	add $t5, $t5, $t6 #store sum in t5
+	sw $t5, table($t7)
+	addi $a2, $a2, 1
+	addi $s2, $s2, 1
+	addi $s3, $s3, 1
+	b add_row_loop 	
 swap_cell:
 	li $s7, 0 #reset the choice register
 	li $v0, 4
