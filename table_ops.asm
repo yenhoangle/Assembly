@@ -25,22 +25,16 @@
 main:
 menu_loop:
 	move $s6, $ra
-	li $t0, 0 #index
 	li $t1, 3 #row size
 	li $t2, 3 #col size
 	li $t3, 4 #word size
-	li $t4, 0 #offset1
-	li $s4, 0 #offset2
-	#reset choices 
-	li $a1, 0
-	li $a2, 0
-	li $s1, 0
-	li $s2, 0	
+	#process the menu options
 	beq $s7, 1, print_row
 	beq $s7, 2, print_col
 	beq $s7, 3, print_table
-	beq $s7, 5, add_row
 	beq $s7, 4, mult_row_const
+	beq $s7, 5, add_row
+	beq $s7, 6, swap_row
 	beq $s7, 7, swap_cell
 	beq $s7, 8, print_cell
 	beq $s7, 9, exit
@@ -128,10 +122,10 @@ print_row:
 	li $v0, 5
 	syscall
 	move $a1, $v0 #store row choice
-	li $a2, 0 #init column
 	li $v0, 4
 	la $a0, printing_message
 	syscall
+	li $a2, 0 #init column
 	j print_row_loop
 print_row_loop:
 	beq $a2, $t2, end_printing
@@ -151,11 +145,11 @@ print_col:
 	syscall
 	li $v0, 5
 	syscall
-	move $a2, $v0 #store column choice
-	li $a1, 0 #init row
+	move $a2, $v0 #store column choice	
 	li $v0, 4
 	la $a0, printing_message
 	syscall
+	li $a1, 0 #init row
 	j print_col_loop
 print_col_loop:
 	beq $a1, $t1, end_printing
@@ -315,6 +309,25 @@ swap_row:
 	li $v0, 5
 	syscall
 	move $s1, $v0 #store row choice
+	li $v0, 4
+	la $a0, doing_op
+	syscall
+	#init columns
+	li $s2, 0
+	li $a2, 0
+	b swap_row_loop
+swap_row_loop:
+	beq $a2, $t2, menu_return
+	jal get_first_offset
+	jal get_second_offset
+	lw $t5, table($s4) #store first value
+	lw $t6, table($t4) #store second value
+	sw $t6, table($s4) #swap
+	sw $t5, table($t4) #swap
+	addi $a2, $a2, 1
+	addi $s2, $s2, 1
+	b swap_row_loop
+	
 get_first_offset: #calculating offset and put it in $s4
 	mul $s4, $a1, $t2 #row x col size
 	add $s4, $s4, $a2 #prev val + col
