@@ -346,7 +346,7 @@ get_second_offset: #calculating offset and put it in $t4
 	add $t4, $t4, $s2 #prev val + col
 	mul $t4, $t4, $t3 #prev val x 4
 	b done
-get_third_offset: #calculating offset and put it in f4
+get_third_offset: #calculating offset and put it in $t7
 	mul $t7, $a3, $t2 #row x col size
 	add $t7, $t7, $s3 #prev val + col
 	mul $t7, $t7, $t3 #prev val x 4
