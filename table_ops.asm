@@ -18,15 +18,22 @@
 	space: .asciiz " "
 	newline: .asciiz "\n"
 	table: #hard coded table
-		.word 1, 2, 3
-		.word 10, 20, 30
-		.word 100, 200, 300
+		.word 10, 20, 30, 40, 50, 60, 70, 80, 90, 100
+		.word 11, 21, 31, 41, 51, 61, 71, 81, 91, 101
+		.word 12, 22, 32, 42, 52, 62, 72, 82, 92, 102
+		.word 13, 23, 33, 43, 53, 63, 73, 83, 93, 103
+		.word 14, 24, 34, 44, 54, 64, 74, 84, 94, 104
+		.word 15, 25, 35, 45, 55, 65, 75, 85, 95, 105
+		.word 16, 26, 36, 46, 56, 66, 76, 86, 96, 106
+		.word 17, 27, 37, 47, 57, 67, 77, 87, 97, 107
+		.word 18, 28, 38, 48, 58, 68, 78, 88, 98, 108
+		.word 19, 29, 39, 49, 59, 69, 79, 89, 99, 109
 .text
 main:
 menu_loop:
 	move $s6, $ra
-	li $t1, 3 #row size
-	li $t2, 3 #col size
+	li $t1, 10 #row size
+	li $t2, 10 #col size
 	li $t3, 4 #word size
 	#process the menu options
 	beq $s7, 1, print_row
@@ -211,6 +218,7 @@ mult_row_const:
 	li $v0, 4
 	la $a0, doing_op
 	syscall
+	li $a2, 0
 	b mult_row_loop
 mult_row_loop:
 	beq $a2, $t2, menu_return
